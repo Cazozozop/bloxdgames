@@ -1,100 +1,223 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conway's Game of Life - Minecraft Style</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Conway's Game of Life - but its bloxd :P</title>
     <style>
-        body {
+        * {
             margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: #2c2c2c;
-            font-family: 'Courier New', monospace;
-            color: #fff;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
-        h1 {
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            touch-action: none;
+        }
+        
+        #canvasContainer {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            overflow: hidden;
         }
         
         #canvas {
-            border: 3px solid #666;
+            border: 3px solid rgba(255,255,255,0.3);
             cursor: crosshair;
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border-radius: 8px;
+            background: #000;
+            touch-action: none;
         }
         
         .controls {
-            margin-top: 20px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            padding: 15px;
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .control-row {
+            display: flex;
+            gap: 8px;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
         }
         
         button {
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 12px 20px;
+            font-size: 14px;
             cursor: pointer;
-            background: #4a4a4a;
+            background: rgba(255,255,255,0.15);
             color: #fff;
-            border: 2px solid #666;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            font-weight: 600;
             transition: all 0.2s;
+            backdrop-filter: blur(10px);
+            flex: 1;
+            min-width: 100px;
         }
         
         button:hover {
-            background: #5a5a5a;
-            border-color: #888;
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
         }
         
         button:active {
-            transform: scale(0.95);
+            transform: translateY(0);
         }
         
-        .speed-control {
+        .slider-group {
             display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 10px;
+            font-size: 13px;
+            font-weight: 600;
         }
         
         input[type="range"] {
-            width: 150px;
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
         }
         
-        .info {
-            margin-top: 15px;
-            text-align: center;
-            color: #aaa;
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            font-size: 13px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+        
+        .stat-item {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .stat-label {
+            opacity: 0.8;
+        }
+        
+        .stat-value {
+            font-weight: 700;
+        }
+        
+        @media (max-width: 768px) {
+            button {
+                padding: 10px 16px;
+                font-size: 13px;
+                min-width: 80px;
+            }
+            
+            .controls {
+                padding: 12px;
+                gap: 10px;
+            }
+            
+            .slider-group {
+                min-width: 150px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>🎮 Jeu de la Vie de Conway - Edition Minecraft</h1>
-    <canvas id="canvas"></canvas>
-    
-    <div class="controls">
-        <button id="startBtn">▶️ Démarrer</button>
-        <button id="stopBtn">⏸️ Pause</button>
-        <button id="clearBtn">🗑️ Effacer</button>
-        <button id="randomBtn">🎲 Aléatoire</button>
-        <div class="speed-control">
-            <label>Vitesse:</label>
-            <input type="range" id="speedSlider" min="1" max="20" value="10">
-            <span id="speedValue">10</span>
-        </div>
+    <div id="canvasContainer">
+        <canvas id="canvas"></canvas>
     </div>
     
-    <div class="info">
-        <p>Cliquez sur la grille pour créer/supprimer des cellules vivantes</p>
-        <p>Génération: <span id="generation">0</span> | Cellules vivantes: <span id="alive">0</span></p>
+    <div class="controls">
+        <div class="control-row">
+            <button id="startBtn">▶️ Start</button>
+            <button id="stopBtn">⏸️ Pause</button>
+            <button id="clearBtn">🗑️ Clear</button>
+            <button id="randomBtn">🎲 Random</button>
+        </div>
+        
+        <div class="control-row">
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Speed</span>
+                    <span id="speedValue">10x</span>
+                </div>
+                <input type="range" id="speedSlider" min="-2" max="50" value="10" step="0.25">
+            </div>
+            
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Grid Size</span>
+                    <span id="sizeValue">50x40</span>
+                </div>
+                <input type="range" id="sizeSlider" min="20" max="100" value="50">
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">Generation:</span>
+                <span class="stat-value" id="generation">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Alive:</span>
+                <span class="stat-value" id="alive">0</span>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -102,19 +225,17 @@
         const ctx = canvas.getContext('2d');
         
         const CELL_SIZE = 16;
-        const COLS = 50;
-        const ROWS = 40;
-        
-        canvas.width = COLS * CELL_SIZE;
-        canvas.height = ROWS * CELL_SIZE;
+        let COLS = 50;
+        let ROWS = 40;
         
         let grid = [];
         let running = false;
         let generation = 0;
         let speed = 10;
         let intervalId = null;
+        let isDrawing = false;
+        let drawValue = true;
         
-        // Charger les textures
         const grassTexture = new Image();
         const dirtTexture = new Image();
         let texturesLoaded = 0;
@@ -133,8 +254,25 @@
         };
         
         function init() {
+            resizeCanvas();
             grid = createEmptyGrid();
             draw();
+        }
+        
+        function resizeCanvas() {
+            const container = document.getElementById('canvasContainer');
+            const maxWidth = container.clientWidth - 20;
+            const maxHeight = container.clientHeight - 20;
+            
+            const targetWidth = COLS * CELL_SIZE;
+            const targetHeight = ROWS * CELL_SIZE;
+            
+            const scale = Math.min(1, Math.min(maxWidth / targetWidth, maxHeight / targetHeight));
+            
+            canvas.width = COLS * CELL_SIZE;
+            canvas.height = ROWS * CELL_SIZE;
+            canvas.style.width = (targetWidth * scale) + 'px';
+            canvas.style.height = (targetHeight * scale) + 'px';
         }
         
         function createEmptyGrid() {
@@ -235,19 +373,61 @@
             draw();
         }
         
-        canvas.addEventListener('click', (e) => {
+        function getCellFromEvent(e) {
             const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            let x, y;
+            if (e.touches) {
+                x = (e.touches[0].clientX - rect.left) * scaleX;
+                y = (e.touches[0].clientY - rect.top) * scaleY;
+            } else {
+                x = (e.clientX - rect.left) * scaleX;
+                y = (e.clientY - rect.top) * scaleY;
+            }
             
             const col = Math.floor(x / CELL_SIZE);
             const row = Math.floor(y / CELL_SIZE);
             
+            return { row, col };
+        }
+        
+        function handleDrawStart(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const { row, col } = getCellFromEvent(e);
             if (row >= 0 && row < ROWS && col >= 0 && col < COLS) {
-                grid[row][col] = !grid[row][col];
+                drawValue = !grid[row][col];
+                grid[row][col] = drawValue;
                 draw();
             }
-        });
+        }
+        
+        function handleDrawMove(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const { row, col } = getCellFromEvent(e);
+            if (row >= 0 && row < ROWS && col >= 0 && col < COLS) {
+                grid[row][col] = drawValue;
+                draw();
+            }
+        }
+        
+        function handleDrawEnd(e) {
+            e.preventDefault();
+            isDrawing = false;
+        }
+        
+        canvas.addEventListener('mousedown', handleDrawStart);
+        canvas.addEventListener('mousemove', handleDrawMove);
+        canvas.addEventListener('mouseup', handleDrawEnd);
+        canvas.addEventListener('mouseleave', handleDrawEnd);
+        
+        canvas.addEventListener('touchstart', handleDrawStart);
+        canvas.addEventListener('touchmove', handleDrawMove);
+        canvas.addEventListener('touchend', handleDrawEnd);
+        canvas.addEventListener('touchcancel', handleDrawEnd);
         
         document.getElementById('startBtn').addEventListener('click', start);
         document.getElementById('stopBtn').addEventListener('click', stop);
@@ -255,12 +435,31 @@
         document.getElementById('randomBtn').addEventListener('click', randomize);
         
         document.getElementById('speedSlider').addEventListener('input', (e) => {
-            speed = parseInt(e.target.value);
-            document.getElementById('speedValue').textContent = speed;
+            const val = parseFloat(e.target.value);
+            speed = val < 0 ? Math.pow(2, val) : val;
+            document.getElementById('speedValue').textContent = speed < 1 ? speed.toFixed(2) + 'x' : speed + 'x';
             if (running) {
                 stop();
                 start();
             }
+        });
+        
+        document.getElementById('sizeSlider').addEventListener('input', (e) => {
+            const size = parseInt(e.target.value);
+            COLS = size;
+            ROWS = Math.round(size * 0.8);
+            document.getElementById('sizeValue').textContent = COLS + 'x' + ROWS;
+            stop();
+            resizeCanvas();
+            grid = createEmptyGrid();
+            generation = 0;
+            document.getElementById('generation').textContent = generation;
+            draw();
+        });
+        
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            draw();
         });
     </script>
 </body>
