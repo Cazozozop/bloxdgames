@@ -263,15 +263,26 @@
             const maxWidth = container.clientWidth - 20;
             const maxHeight = container.clientHeight - 20;
             
-            const targetWidth = COLS * CELL_SIZE;
-            const targetHeight = ROWS * CELL_SIZE;
-            
-            const scale = Math.min(1, Math.min(maxWidth / targetWidth, maxHeight / targetHeight));
-            
             canvas.width = COLS * CELL_SIZE;
             canvas.height = ROWS * CELL_SIZE;
-            canvas.style.width = (targetWidth * scale) + 'px';
-            canvas.style.height = (targetHeight * scale) + 'px';
+            
+            const scaleX = maxWidth / canvas.width;
+            const scaleY = maxHeight / canvas.height;
+            const scale = Math.min(scaleX, scaleY, 1);
+            
+            const displayWidth = Math.floor(canvas.width * scale);
+            const displayHeight = Math.floor(canvas.height * scale);
+            
+            canvas.style.width = displayWidth + 'px';
+            canvas.style.height = displayHeight + 'px';
+            canvas.style.imageRendering = 'pixelated';
+            canvas.style.imageRendering = '-moz-crisp-edges';
+            canvas.style.imageRendering = 'crisp-edges';
+            
+            ctx.imageSmoothingEnabled = false;
+            ctx.mozImageSmoothingEnabled = false;
+            ctx.webkitImageSmoothingEnabled = false;
+            ctx.msImageSmoothingEnabled = false;
         }
         
         function createEmptyGrid() {
